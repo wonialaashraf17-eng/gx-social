@@ -1,0 +1,15 @@
+const $=s=>document.querySelector(s);let currentUser=null,registerMode=false;
+function show(view){document.querySelectorAll(".view").forEach(x=>x.classList.add("hidden"));$("#"+view).classList.remove("hidden");}
+document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>show(b.dataset.view)));
+async function api(url,options={}){const r=await fetch(url,{...options,headers:{...(options.body instanceof FormData?{}:{"Content-Type":"application/json"}),...(options.headers||{})},credentials:"same-origin"});const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.error||"Request failed");return data;}
+function renderVideos(videos){const html=videos.length?videos.map(v=>`<article class="video-card"><video controls playsinline preload="metadata" src="${v.url}"></video><p>${escapeHtml(v.caption||"")}</p><small>@${escapeHtml(v.username||"creator")}</small></article>`).join(""):"<p>No videos yet. Be the first to share one.</p>";$("#videos").innerHTML=html;$("#watchList").innerHTML=html;}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function loadVideos(){try{renderVideos((await api("/api/videos")).videos)}catch{$("#videos").textContent="Videos are temporarily unavailable.";}}
+async function refreshUser(){try{currentUser=(await api("/api/me")).user;$("#accountBtn").textContent=currentUser?"@"+currentUser.username:"Sign in"}catch{currentUser=null;$("#accountBtn").textContent="Sign in"}}
+$("#accountBtn").onclick=()=>{$("#authMessage").textContent="";$("#authDialog").showModal()};
+$("#closeAuth").onclick=()=>$("#authDialog").close();
+$("#switchAuth").onclick=()=>{registerMode=!registerMode;$("#authTitle").textContent=registerMode?"Create account":"Sign in";$("#authSubmit").textContent=registerMode?"Create account":"Sign in";$("#usernameLabel").classList.toggle("hidden",!registerMode);$("#switchAuth").textContent=registerMode?"I already have an account":"Create account";};
+$("#authForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget),body=Object.fromEntries(f);try{const u=await api(registerMode?"/api/register":"/api/login",{method:"POST",body:JSON.stringify(body)});currentUser=u.user;$("#accountBtn").textContent="@"+currentUser.username;$("#authDialog").close();}catch(err){$("#authMessage").textContent=err.message}};
+$("#uploadForm").onsubmit=async e=>{e.preventDefault();$("#uploadMessage").textContent="Uploading…";const fd=new FormData(e.currentTarget);try{await api("/api/videos",{method:"POST",body:fd});$("#uploadMessage").textContent="Upload complete.";e.currentTarget.reset();loadVideos();}catch(err){$("#uploadMessage").textContent=err.message;}};
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+refreshUser();loadVideos();
