@@ -59,7 +59,8 @@ app.post("/api/register", async (req, res) => {
       ? "Account already exists."
       : "Could not create account."
   });
-} res.status(e.code === "23505" ? 409 : 500).json({ error: e.code === "23505" ? "Username or email already exists." : "Could not create account." }); }
+}
+  res.status(e.code === "23505" ? 409 : 500).json({ error: e.code === "23505" ? "Username or email already exists." : "Could not create account." }); }
 });
 
 app.post("/api/login", async (req, res) => {
