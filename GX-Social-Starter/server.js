@@ -52,7 +52,14 @@ app.post("/api/register", async (req, res) => {
     const user = result.rows[0];
     res.cookie("gx_token", jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: "7d" }), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: 7*24*60*60*1000 });
     res.status(201).json({ user });
-  } catch (e) { res.status(e.code === "23505" ? 409 : 500).json({ error: e.code === "23505" ? "Username or email already exists." : "Could not create account." }); }
+  } catch (e) {} catch (e) {
+  console.error("Registration error:", e);
+  res.status(e.code === "23505" ? 409 : 500).json({
+    error: e.code === "23505"
+      ? "Account already exists."
+      : "Could not create account."
+  });
+} res.status(e.code === "23505" ? 409 : 500).json({ error: e.code === "23505" ? "Username or email already exists." : "Could not create account." }); }
 });
 
 app.post("/api/login", async (req, res) => {
