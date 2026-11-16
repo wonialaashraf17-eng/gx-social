@@ -102,4 +102,22 @@ app.post("/api/reports", auth, async (req, res) => {
   catch { res.status(400).json({ error: "Could not submit report." }); }
 });
 app.get("*", (req, res, next) => req.path.startsWith("/api/") ? next() : res.sendFile(path.join(__dirname, "public", "index.html")));
-app.listen(PORT, () => console.log(`GX Social listening on ${PORT}`));
+async function startServer() {
+  try {
+    const schema = fs.readFileSync(
+      path.join(__dirname, "schema.sql"),
+      "utf8"
+    );
+
+    await pool.query(schema);
+
+    app.listen(PORT, () => {
+      console.log(`GX Social listening on ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Database initialization failed:", error);
+    process.exit(1);
+  }
+}
+
+startServer();
