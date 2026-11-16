@@ -10,6 +10,27 @@ $("#accountBtn").onclick=()=>{$("#authMessage").textContent="";$("#authDialog").
 $("#closeAuth").onclick=()=>$("#authDialog").close();
 $("#switchAuth").onclick=()=>{registerMode=!registerMode;$("#authTitle").textContent=registerMode?"Create account":"Sign in";$("#authSubmit").textContent=registerMode?"Create account":"Sign in";$("#usernameLabel").classList.toggle("hidden",!registerMode);$("#switchAuth").textContent=registerMode?"I already have an account":"Create account";};
 $("#authForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget),body=Object.fromEntries(f);try{const u=await api(registerMode?"/api/register":"/api/login",{method:"POST",body:JSON.stringify(body)});currentUser=u.user;$("#accountBtn").textContent="@"+currentUser.username;$("#authDialog").close();}catch(err){$("#authMessage").textContent=err.message}};
-$("#uploadForm").onsubmit=async e=>{e.preventDefault();$("#uploadMessage").textContent="Uploading…";const fd=new FormData(e.currentTarget);try{await api("/api/videos",{method:"POST",body:fd});$("#uploadMessage").textContent="Upload complete.";e.currentTarget.reset();loadVideos();}catch(err){$("#uploadMessage").textContent=err.message;}};
+$("#uploadForm").onsubmit = async (e) => {
+  e.preventDefault();
+
+  const form = e.currentTarget;
+  const fd = new FormData(form);
+
+  $("#uploadMessage").textContent = "Uploading...";
+
+  try {
+    await api("/api/videos", {
+      method: "POST",
+      body: fd
+    });
+
+    $("#uploadMessage").textContent = "Upload complete.";
+    form.reset();
+    loadVideos();
+
+  } catch (err) {
+    $("#uploadMessage").textContent = err.message;
+  }
+};
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
 refreshUser();loadVideos();
